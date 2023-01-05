@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
+import { GraphQLError } from 'graphql'
 
 import { HASH_SALT_ROUNDS } from '../config/constants'
-import { errorHandler } from '../utils/errorHandler'
 
 class HashService {
   hashPassword = async (password: string) => {
@@ -9,7 +9,7 @@ class HashService {
       const salt = await bcrypt.genSalt(HASH_SALT_ROUNDS)
       return await bcrypt.hash(password, salt)
     } catch (_) {
-      errorHandler(500)
+      throw new GraphQLError('Oops! something went wrong')
     }
   }
 
@@ -17,7 +17,7 @@ class HashService {
     try {
       return await bcrypt.compare(inputPassword, hashedPassword)
     } catch (_) {
-      errorHandler(500)
+      throw new GraphQLError('Oops! something went wrong')
     }
   }
 }

@@ -25,6 +25,8 @@ import { MyContext } from './types/shared.types'
 import typeDefs from './graphql/typeDefs'
 import resolvers from './graphql/resolvers'
 
+type none = 'none'
+type lax = 'lax'
 const startServer = async () => {
   const app = express()
   const httpServer = http.createServer(app)
@@ -54,8 +56,9 @@ const startServer = async () => {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: NODE_ENV === 'production',
       httpOnly: true,
+      sameSite: NODE_ENV === 'production' ? ('none' as none) : ('lax' as lax),
+      secure: NODE_ENV === 'production',
       maxAge: SESSION_COOKIE_MAX_AGE,
     },
   }
@@ -73,4 +76,4 @@ const startServer = async () => {
   console.log(`🚀 Server ready at ${API_BASE_URL}/graphql`)
 }
 
-startServer()
+startServer().catch((err) => console.log(err))

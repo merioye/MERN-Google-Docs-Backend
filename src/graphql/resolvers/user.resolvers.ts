@@ -1,3 +1,5 @@
+import { GraphQLError } from 'graphql'
+
 import { SESSION_COOKIE_NAME } from '../../config/constants'
 import UserDto from '../../dtos/user.dto'
 import hashService from '../../services/hash.service'
@@ -9,14 +11,13 @@ import {
   RegisterArgs,
   UserQueryResponse,
 } from '../../types/user.types'
-import { errorHandler } from '../../utils/errorHandler'
 import { loginSchema, registerSchema } from '../../validations/user.validation'
 
 const resolvers = {
   Query: {
     whoAmI: async (_: any, __: any, { req }: MyContext): Promise<UserQueryResponse> => {
       const userId = req.session?.userId
-      if (!userId) errorHandler(401, 'User is not authenticated')
+      if (!userId) throw new GraphQLError('User is not authenticated')
 
       const user = await userService.findUser({ field: 'id', value: userId as string })
       const transformedUser = new UserDto(user)
@@ -33,10 +34,10 @@ const resolvers = {
       const { email, password } = args
 
       const { error } = registerSchema.validate(args)
-      if (error) errorHandler(400, error.message)
+      if (error) throw new GraphQLError(error.message)
 
       const user = await userService.findUser({ field: 'email', value: email })
-      if (user) errorHandler(409, 'User already exists')
+      if (user) throw new GraphQLError('User already exists!')
 
       const hashedPassword = await hashService.hashPassword(password)
 
@@ -58,13 +59,13 @@ const resolvers = {
       const { email, password } = args
 
       const { error } = loginSchema.validate(args)
-      if (error) errorHandler(400, error.message)
+      if (error) throw new GraphQLError(error.message)
 
       const user = await userService.findUser({ field: 'email', value: email })
-      if (!user) errorHandler(404, 'Invalid credentials')
+      if (!user) throw new GraphQLError('Invalid credentials')
 
       const isMatched = await hashService.comparePassword(password, user.password)
-      if (!isMatched) errorHandler(404, 'Invalid credentials')
+      if (!isMatched) throw new GraphQLError('Invalid credentials')
 
       req.session.userId = user.id
 

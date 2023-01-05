@@ -1,6 +1,7 @@
+import { GraphQLError } from 'graphql'
+
 import { pool } from '../config/db'
 import { RegisterArgs } from '../types/user.types'
-import { errorHandler } from '../utils/errorHandler'
 
 class UserService {
   findUser = async (filter: { field: string; value: string }) => {
@@ -9,8 +10,8 @@ class UserService {
       const query = `SELECT * FROM "users" WHERE "${field}" = $1`
       const result = await pool.query(query, [value])
       return result.rows[0]
-    } catch (e) {
-      errorHandler(500)
+    } catch (_) {
+      throw new GraphQLError('Oops! something went wrong')
     }
   }
 
@@ -21,7 +22,7 @@ class UserService {
       const result = await pool.query(query, [name, email, password, profile])
       return result.rows[0]
     } catch (_) {
-      errorHandler(500)
+      throw new GraphQLError('Oops! something went wrong')
     }
   }
 }
